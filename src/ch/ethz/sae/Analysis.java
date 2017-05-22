@@ -7,6 +7,9 @@ import java.util.List;
 import apron.Abstract1;
 import apron.ApronException;
 import apron.Environment;
+import apron.Lincons1;
+import apron.Linexpr1;
+import apron.Linterm1;
 import apron.Manager;
 import apron.MpqScalar;
 import apron.Polka;
@@ -24,8 +27,13 @@ import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
 import soot.jimple.internal.JAddExpr;
+import soot.jimple.internal.JEqExpr;
+import soot.jimple.internal.JGeExpr;
+import soot.jimple.internal.JGtExpr;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
+import soot.jimple.internal.JNeExpr;
 import soot.jimple.internal.JSubExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.toolkits.annotation.logic.Loop;
@@ -141,6 +149,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
 
+		
 		Stmt s = (Stmt) op;
 		System.out.println(s.toString());
 		Abstract1 tempAbstract1;
@@ -156,15 +165,16 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				
 				if(rhs instanceof JAddExpr){
 					Value leftVal = ((JAddExpr) rhs).getOp1();
-					MpqScalar rightVal = new MpqScalar (((JAddExpr) rhs).getOp2().getType().getNumber());
-					System.out.println("Rightval: "+ (((JAddExpr) rhs).getOp1().getType().getNumber()));	
+					MpqScalar rightVal = new MpqScalar (Integer.parseInt((((JAddExpr) rhs).getOp2().toString())));
+						
 					if(leftVal instanceof Local){
 						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
 						Texpr1CstNode rightOp = new Texpr1CstNode(rightVal);
 						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
 						Texpr1Intern t = new Texpr1Intern(env, opr);
-						System.out.println("WE PRINT : "+t.toString());
 						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
+						
+						//System.out.println(tempAbstract1.toString(man));
 						
 						
 						
@@ -184,6 +194,38 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 			} else if (s instanceof JIfStmt) {
 				IfStmt ifStmt = (JIfStmt) s;
 				branchFlag = true;
+				if(ifStmt instanceof JEqExpr){
+					Value leftVal = ((JEqExpr) ifStmt).getOp1();
+					MpqScalar cst = new MpqScalar((Integer.parseInt(((JEqExpr) ifStmt).getOp1().toString())));
+					MpqScalar one = new MpqScalar(1);
+					Linterm1[] terms = {new Linterm1(leftVal.toString(), one)};
+					Linexpr1 expr = new Linexpr1(env, terms, cst );
+					Lincons1[] constraints = {new Lincons1(4, expr)};
+					tempAbstract1 = new Abstract1(man, constraints);
+					
+					
+					//LinExpr1 linexp = new LinExpr1(env, left, )
+					
+				}
+				else if(ifStmt instanceof JGtExpr){
+					
+				}
+				else if(ifStmt instanceof JGeExpr){
+					
+				}
+				else if(ifStmt instanceof JLtExpr){
+					
+				}
+				else if(ifStmt instanceof JLtExpr){
+					
+				}
+				else if(ifStmt instanceof JNeExpr){
+					
+				}
+				else{
+					System.out.println("Error in if-Statement");
+				}
+				
 				/* TODO: handle if statement*/
 				//only if, no if-else
 			}
