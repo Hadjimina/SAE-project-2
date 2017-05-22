@@ -8,8 +8,12 @@ import apron.Abstract1;
 import apron.ApronException;
 import apron.Environment;
 import apron.Manager;
+import apron.MpqScalar;
 import apron.Polka;
-
+import apron.Texpr1BinNode;
+import apron.Texpr1CstNode;
+import apron.Texpr1Intern;
+import apron.Texpr1VarNode;
 import soot.IntegerType;
 import soot.Local;
 import soot.SootClass;
@@ -19,7 +23,10 @@ import soot.Value;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
+import soot.jimple.internal.JAddExpr;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.internal.JMulExpr;
+import soot.jimple.internal.JSubExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.toolkits.annotation.logic.Loop;
 import soot.toolkits.graph.LoopNestTree;
@@ -135,17 +142,68 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
 
 		Stmt s = (Stmt) op;
-
-		if (s instanceof DefinitionStmt) {
-			DefinitionStmt sd = (DefinitionStmt) s;
-			Value lhs = sd.getLeftOp();
-			Value rhs = sd.getRightOp();
-			/* TODO: handle assignment */
-
-		} else if (s instanceof JIfStmt) {
-			IfStmt ifStmt = (JIfStmt) s;
-			/* TODO: handle if statement*/
+		System.out.println(s.toString());
+		Abstract1 tempAbstract1;
+		boolean branchFlag = false;
+		try {
+			tempAbstract1 = new Abstract1(man, env);
+			
+	
+			if (s instanceof DefinitionStmt) {
+				DefinitionStmt sd = (DefinitionStmt) s;
+				Value lhs = sd.getLeftOp();
+				Value rhs = sd.getRightOp();
+				
+				if(rhs instanceof JAddExpr){
+					Value leftVal = ((JAddExpr) rhs).getOp1();
+					MpqScalar rightVal = new MpqScalar (((JAddExpr) rhs).getOp2().getType().getNumber());
+					System.out.println("Rightval: "+ (((JAddExpr) rhs).getOp1().getType().getNumber()));	
+					if(leftVal instanceof Local){
+						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
+						Texpr1CstNode rightOp = new Texpr1CstNode(rightVal);
+						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
+						Texpr1Intern t = new Texpr1Intern(env, opr);
+						System.out.println("WE PRINT : "+t.toString());
+						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
+						
+						
+						
+						
+					}
+				}
+				else if(rhs instanceof JSubExpr){
+					
+				}
+				else if(rhs instanceof JMulExpr){
+					
+				}
+				/* TODO: handle assignment */
+				//lhs is always a variable
+				//rhs is a variable, a numeral or expression
+	
+			} else if (s instanceof JIfStmt) {
+				IfStmt ifStmt = (JIfStmt) s;
+				branchFlag = true;
+				/* TODO: handle if statement*/
+				//only if, no if-else
+			}
+			else{
+				
+			}
+			if(branchFlag){
+				
+			}
+			else{
+				AWrapper fallOutWrapper = new AWrapper(tempAbstract1);
+				fallOutWrappers.add(fallOutWrapper);
+			}
+			//System.out.println(.toString(man));
+			
+		} catch (ApronException e1) {
+			System.out.println("Flowtrought error");
+			e1.printStackTrace();
 		}
+		
 	}
 
 	@Override
@@ -175,6 +233,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 	}
 
+	//widen operator
 	@Override
 	protected void merge(Unit succNode, AWrapper w1, AWrapper w2, AWrapper w3) {
 		Counter count = loopHeads.get(succNode);
