@@ -14,12 +14,14 @@ import apron.Texpr1BinNode;
 import apron.Texpr1CstNode;
 import apron.Texpr1Intern;
 import apron.Texpr1VarNode;
+import soot.Immediate;
 import soot.IntegerType;
 import soot.Local;
 import soot.SootClass;
 import soot.SootField;
 import soot.Unit;
 import soot.Value;
+import soot.jimple.ConcreteRef;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
@@ -155,21 +157,65 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				Value rhs = sd.getRightOp();
 				
 				if(rhs instanceof JAddExpr){
+					/*Check which operands are variables/constants so we
+					 * can handle casting accordingly. 
+					 */
 					Value leftVal = ((JAddExpr) rhs).getOp1();
-					MpqScalar rightVal = new MpqScalar (((JAddExpr) rhs).getOp2().getType().getNumber());
-					System.out.println("Rightval: "+ (((JAddExpr) rhs).getOp1().getType().getNumber()));	
-					if(leftVal instanceof Local){
+					Value rightVal = ((JAddExpr) rhs).getOp2();
+					
+					String op1ClassName = ((JAddExpr) rhs).getOp1().getClass().toString();
+					String op2ClassName = ((JAddExpr) rhs).getOp2().getClass().toString();
+					
+					boolean leftVarFlag =  op1ClassName.toLowerCase().contains("jimplelocal");
+					boolean rightVarFlag =  op2ClassName.toLowerCase().contains("jimplelocal");
+					
+					
+					if(leftVarFlag && rightVarFlag){
+						
 						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
-						Texpr1CstNode rightOp = new Texpr1CstNode(rightVal);
+						Texpr1VarNode rightOp = new Texpr1VarNode(rightVal.toString());
+						
 						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
 						Texpr1Intern t = new Texpr1Intern(env, opr);
-						System.out.println("WE PRINT : "+t.toString());
-						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
 						
+						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);	
 						
+					} else if(leftVarFlag && !rightVarFlag){
 						
+						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
+						MpqScalar constRightVal = new MpqScalar(Integer.parseInt(rightVal.toString()));
+						Texpr1CstNode rightOp = new Texpr1CstNode(constRightVal);
+						
+						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
+						Texpr1Intern t = new Texpr1Intern(env, opr);
+						
+						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);	
+					
+					} else if(!leftVarFlag && rightVarFlag) {
+						
+						MpqScalar constLeftVal = new MpqScalar(Integer.parseInt(leftVal.toString()));
+						Texpr1CstNode leftOp = new Texpr1CstNode(constLeftVal);
+						Texpr1VarNode rightOp = new Texpr1VarNode(rightVal.toString());
+						
+						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
+						Texpr1Intern t = new Texpr1Intern(env, opr);
+						
+						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);	
+						
+					} else {
+						
+						MpqScalar constLeftVal = new MpqScalar(Integer.parseInt(leftVal.toString()));
+						Texpr1CstNode leftOp = new Texpr1CstNode(constLeftVal);
+						MpqScalar constRightVal = new MpqScalar(Integer.parseInt(rightVal.toString()));
+						Texpr1CstNode rightOp = new Texpr1CstNode(constRightVal);
+						
+						Texpr1BinNode opr = new Texpr1BinNode(0, leftOp, rightOp);
+						Texpr1Intern t = new Texpr1Intern(env, opr);
+						
+						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);	
 						
 					}
+					
 				}
 				else if(rhs instanceof JSubExpr){
 					
