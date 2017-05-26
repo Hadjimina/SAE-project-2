@@ -66,7 +66,7 @@ class SootApronConverter {
 	}
 	
 	public Texpr1Node convertValueExpression(Value expression) {
-		if(expression instanceof JimpleLocal) {
+		if(expression instanceof JimpleLocal || expression instanceof IntConstant) {
 			return convertSingleValue(expression);
 		} else {
 			throw new ConversionArgumentException("convertValueExpression called with invalid argument");

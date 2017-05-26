@@ -7,15 +7,14 @@ import java.util.List;
 import apron.Abstract1;
 import apron.ApronException;
 import apron.Environment;
-import apron.Lincons1;
-import apron.Linexpr1;
-import apron.Linterm1;
 import apron.Manager;
 import apron.MpqScalar;
 import apron.Polka;
+import apron.Tcons1;
 import apron.Texpr1BinNode;
 import apron.Texpr1CstNode;
 import apron.Texpr1Intern;
+import apron.Texpr1Node;
 import apron.Texpr1VarNode;
 import soot.IntegerType;
 import soot.Local;
@@ -27,11 +26,13 @@ import soot.Value;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
+import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JAddExpr;
 import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
 import soot.jimple.internal.JGtExpr;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
 import soot.jimple.internal.JNeExpr;
@@ -49,7 +50,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	private static final int WIDENING_THRESHOLD = 6;
 
 	private HashMap<Unit, Counter> loopHeads, backJumps;
-
+	
 	private void recordIntLocalVars() {
 
 		Chain<Local> locals = g.getBody().getLocals();
@@ -153,158 +154,125 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		
 		Stmt s = (Stmt) op;
 		System.out.println(s.toString());
-		Abstract1 tempAbstract1;
-		boolean branchFlag = false;
+
 		try {
-			tempAbstract1 = new Abstract1(man, env);
-
-
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
 				Value lhs = sd.getLeftOp();
 				Value rhs = sd.getRightOp();
 
 				if(rhs instanceof JAddExpr || rhs instanceof JSubExpr || rhs instanceof JMulExpr) {
-					Value leftVal = new JimpleLocal("",new UnknownType(null)), rightVal = new JimpleLocal("",new UnknownType(null));
-					String op1ClassName = "",op2ClassName = "";
-	
-					/*Check which operands are variables/constants so we
-					 * can handle casting accordingly.
-					 */
-					int operatorCode = 0;
-					if(rhs instanceof JAddExpr){
-						operatorCode = Texpr1BinNode.OP_ADD;
-	
-						leftVal = ((JAddExpr) rhs).getOp1();
-						rightVal = ((JAddExpr) rhs).getOp2();
-	
-						op1ClassName = ((JAddExpr) rhs).getOp1().getClass().toString();
-						op2ClassName = ((JAddExpr) rhs).getOp2().getClass().toString();
-	
-					}else if (rhs instanceof JSubExpr) {
-						operatorCode = Texpr1BinNode.OP_SUB;
-	
-						leftVal = ((JSubExpr) rhs).getOp1();
-						rightVal = ((JSubExpr) rhs).getOp2();
-	
-						op1ClassName = ((JSubExpr) rhs).getOp1().getClass().toString();
-						op2ClassName = ((JSubExpr) rhs).getOp2().getClass().toString();
-	
-					}else if (rhs instanceof JMulExpr){
-						operatorCode = Texpr1BinNode.OP_MUL;
-	
-						leftVal = ((JMulExpr) rhs).getOp1();
-						rightVal = ((JMulExpr) rhs).getOp2();
-	
-						op1ClassName = ((JMulExpr) rhs).getOp1().getClass().toString();
-						op2ClassName = ((JMulExpr) rhs).getOp2().getClass().toString();
-					}
-	
-	
-					boolean leftVarFlag =  op1ClassName.toLowerCase().contains("jimplelocal");
-					boolean rightVarFlag =  op2ClassName.toLowerCase().contains("jimplelocal");
-	
-	
-					if(leftVarFlag && rightVarFlag){
-	
-						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
-						Texpr1VarNode rightOp = new Texpr1VarNode(rightVal.toString());
-	
-						Texpr1BinNode opr = new Texpr1BinNode(operatorCode, leftOp, rightOp);
-						Texpr1Intern t = new Texpr1Intern(env, opr);
-	
-						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
-	
-					} else if(leftVarFlag && !rightVarFlag){
-	
-						Texpr1VarNode leftOp = new Texpr1VarNode(leftVal.toString());
-						MpqScalar constRightVal = new MpqScalar(Integer.parseInt(rightVal.toString()));
-						Texpr1CstNode rightOp = new Texpr1CstNode(constRightVal);
-	
-						Texpr1BinNode opr = new Texpr1BinNode(operatorCode, leftOp, rightOp);
-						Texpr1Intern t = new Texpr1Intern(env, opr);
-	
-						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
-	
-					} else if(!leftVarFlag && rightVarFlag) {
-	
-						MpqScalar constLeftVal = new MpqScalar(Integer.parseInt(leftVal.toString()));
-						Texpr1CstNode leftOp = new Texpr1CstNode(constLeftVal);
-						Texpr1VarNode rightOp = new Texpr1VarNode(rightVal.toString());
-	
-						Texpr1BinNode opr = new Texpr1BinNode(operatorCode, leftOp, rightOp);
-						Texpr1Intern t = new Texpr1Intern(env, opr);
-	
-						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
-	
-					} else {
-	
-						MpqScalar constLeftVal = new MpqScalar(Integer.parseInt(leftVal.toString()));
-						Texpr1CstNode leftOp = new Texpr1CstNode(constLeftVal);
-						MpqScalar constRightVal = new MpqScalar(Integer.parseInt(rightVal.toString()));
-						Texpr1CstNode rightOp = new Texpr1CstNode(constRightVal);
-	
-						Texpr1BinNode opr = new Texpr1BinNode(operatorCode, leftOp, rightOp);
-						Texpr1Intern t = new Texpr1Intern(env, opr);
-	
-						inWrapper.get().assign(man, lhs.toString(), t, tempAbstract1);
-	
-					}
+					Texpr1Intern t = converter.convertArithExpression(rhs, env);
+					
+
+					inWrapper.get().assign(man, lhs.toString(), t, null);
+			
 				}
 			}
 		
-				
+			
 	
 			 else if (s instanceof JIfStmt) {
-				IfStmt ifStmt = (JIfStmt) s; 
-				//System.out.println(ifStmt.getCondition().toString());
-				branchFlag = true;
-				if(ifStmt instanceof JEqExpr){
-					Value leftVal = ((JEqExpr) ifStmt).getOp1();
-					MpqScalar cst = new MpqScalar((Integer.parseInt(((JEqExpr) ifStmt).getOp1().toString())));
-					MpqScalar one = new MpqScalar(1);
-					Linterm1[] terms = {new Linterm1(leftVal.toString(), one)};
-					Linexpr1 expr = new Linexpr1(env, terms, cst );
-					Lincons1[] constraints = {new Lincons1(4, expr)};
-					tempAbstract1 = new Abstract1(man, constraints);
+				Value expr = ((JIfStmt) s).getCondition();
+				Value leftValue = null;
+				Value rightValue = null;
+				
+				//Makes two expression trees in apron (Bsp: a-9 --> a-9 and 9-a
+				if(expr instanceof AbstractJimpleIntBinopExpr){
+					leftValue = ((AbstractJimpleIntBinopExpr) expr).getOp1();
+					rightValue = ((AbstractJimpleIntBinopExpr) expr).getOp2();
+				}
+
+				Texpr1Node leftNode = converter.convertValueExpression(leftValue);
+				Texpr1Node rightNode = converter.convertValueExpression(rightValue);
+				Texpr1Node leftMinusRight = new Texpr1BinNode(Texpr1BinNode.OP_SUB, leftNode, rightNode);
+				Texpr1Node rightMinusLeft = new Texpr1BinNode(Texpr1BinNode.OP_SUB, rightNode, leftNode);
+				
+				Abstract1 falloutAbstractFinal = null;
+				Abstract1 branchAbstractFinal = null;
+				
+								
+				//check which expression and creates constraints for branching and fallout
+				// "=="
+				if(expr instanceof JEqExpr){
+					//branch-case
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 					
-					
-					//LinExpr1 linexp = new LinExpr1(env, left, )
+					//fallout-case
+					Tcons1 falloutConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					Tcons1 falloutConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					Abstract1 falloutAbstract1 = inWrapper.get().meetCopy(man, falloutConstraint1);
+					Abstract1 falloutAbstract2 = inWrapper.get().meetCopy(man, falloutConstraint2);
+					falloutAbstractFinal = falloutAbstract1.joinCopy(man, falloutAbstract2);
+								
+				}
+				//">"
+				else if(expr instanceof JGtExpr){
+					//branch-case
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+
+					//fallout-case
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 					
 				}
-				else if(ifStmt instanceof JGtExpr){
+				//">="
+				else if(expr instanceof JGeExpr){
+					//branch-case
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+
+					//fallout-case
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 					
 				}
-				else if(ifStmt instanceof JGeExpr){
-					
+				//"<"
+				else if(expr instanceof JLtExpr){
+					//branch-case
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+
+					//fallout-case
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 				}
-				else if(ifStmt instanceof JLtExpr){
-					
+				//"<="
+				else if(expr instanceof JLeExpr){
+					//branch-case
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+
+					//fallout-case
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 				}
-				else if(ifStmt instanceof JLtExpr){
+				//"!="
+				else if(expr instanceof JNeExpr){
+					//branch-case
+					Tcons1 branchConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					Tcons1 branchConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					Abstract1 branchAbstract1 = inWrapper.get().meetCopy(man, branchConstraint1);
+					Abstract1 branchAbstract2 = inWrapper.get().meetCopy(man, branchConstraint2);
+					branchAbstractFinal = branchAbstract1.joinCopy(man, branchAbstract2);
 					
-				}
-				else if(ifStmt instanceof JNeExpr){
-					
+					//fallout-case
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);			
 				}
 				else{
 					System.out.println("Error in if-Statement");
 				}
+				fallOutWrappers.add(new AWrapper(falloutAbstractFinal));
+				branchOutWrappers.add(new AWrapper(branchAbstractFinal));
 				
-				/* TODO: handle if statement*/
-				//only if, no if-else
-			}
-			else{
 				
+
 			}
-			if(branchFlag){
-				
-			}
-			else{
-				AWrapper fallOutWrapper = new AWrapper(tempAbstract1);
-				fallOutWrappers.add(fallOutWrapper);
-			}
-			//System.out.println(.toString(man));
+			
+			
 			
 		} catch (ApronException e1) {
 			System.out.println("Flowtrought error");
@@ -401,7 +369,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				|| val.getType().toString().equals("byte");
 	}
 
-
+	public static SootApronConverter converter = new SootApronConverter();
 	public static Manager man;
 	public static Environment env;
 	public UnitGraph g;
