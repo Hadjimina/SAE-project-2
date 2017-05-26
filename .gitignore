@@ -1,0 +1,6 @@
+# ignore everything...
+*
+# ... but directories, java source files and gitignores
+!*/
+!*.java
+!*.gitignore
