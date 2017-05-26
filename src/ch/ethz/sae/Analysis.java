@@ -46,6 +46,7 @@ import soot.util.Chain;
 
 // Implement your numerical analysis here.
 public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
+	boolean flag;
 
 	private static final int WIDENING_THRESHOLD = 6;
 
@@ -128,6 +129,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	/* === Constructor === */
 	public Analysis(UnitGraph g, SootClass jc) {
 		super(g);
+		this.flag = true;
+
 
 		this.g = g;
 		this.jclass = jc;
@@ -150,10 +153,13 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	@Override
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
-
+		if(this.flag) {
+			System.out.println(this.g);
+			System.out.println(env);
+			this.flag = false;
+		}
 		
 		Stmt s = (Stmt) op;
-		System.out.println(s.toString());
 
 		try {
 			if (s instanceof DefinitionStmt) {
