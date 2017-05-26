@@ -154,8 +154,6 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
 		if(this.flag) {
-			System.out.println(this.g);
-			System.out.println(env);
 			this.flag = false;
 		}
 		
@@ -271,8 +269,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				else{
 					System.out.println("Error in if-Statement");
 				}
-				fallOutWrappers.add(new AWrapper(falloutAbstractFinal));
-				branchOutWrappers.add(new AWrapper(branchAbstractFinal));
+				fallOutWrappers.set(0,new AWrapper(falloutAbstractFinal));
+				branchOutWrappers.set(0,new AWrapper(branchAbstractFinal));
 				
 				
 
