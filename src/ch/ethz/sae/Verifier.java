@@ -96,7 +96,7 @@ public class Verifier {
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
 	    		System.out.println(currentBounds.toString());
-	    		System.out.println("YOLO");
+
 
 			} catch (ApronException e) {
 				// TODO Auto-generated catch block

@@ -300,11 +300,25 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				else if(methodName.equals("<init>") && className.equals("Robot")){
 					robotProperties.add(funcCall);
 				}
-				System.out.println("Analysis: "+weldAtCalls.size());
 
 				 
 			 }
-			
+			System.out.println(local_ints.length);
+			for(String valName : local_ints){
+	    		Texpr1Node node = new Texpr1VarNode(valName);
+	    		Texpr1Intern apronArg = new Texpr1Intern(env, node);
+	    		try {
+					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
+		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+
+
+				} catch (ApronException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+
 			
 			
 		} catch (ApronException e1) {
