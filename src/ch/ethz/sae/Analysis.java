@@ -56,9 +56,9 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 	private HashMap<Unit, Counter> loopHeads, backJumps;
 	
-	public List<JInvokeStmt> weldAtCalls;
-	public List<JInvokeStmt> weldBetweenCalls;
-	public List<JInvokeStmt> robotProperties;
+	public List<JInvokeStmt> weldAtCalls = new ArrayList<JInvokeStmt>();
+	public List<JInvokeStmt> weldBetweenCalls = new ArrayList<JInvokeStmt>();
+	public List<JInvokeStmt> robotProperties = new ArrayList<JInvokeStmt>();
 	
 	
 	private void recordIntLocalVars() {
@@ -162,9 +162,6 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	@Override
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
-		weldAtCalls = new ArrayList<JInvokeStmt>();
-		weldBetweenCalls = new ArrayList<JInvokeStmt>();
-		robotProperties = new ArrayList<JInvokeStmt>();
 		if(this.flag) {
 			this.flag = false;
 		}

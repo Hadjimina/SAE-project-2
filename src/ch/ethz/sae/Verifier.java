@@ -6,10 +6,17 @@ import java.util.List;
 import apron.Abstract1;
 import apron.ApronException;
 import apron.Interval;
+import apron.MpqScalar;
+import apron.Texpr1CstNode;
 import apron.Texpr1Intern;
+import apron.Texpr1Node;
+import apron.Texpr1VarNode;
+import soot.jimple.IntConstant;
 import soot.jimple.InvokeExpr;
+import soot.jimple.internal.AbstractJimpleFloatBinopExpr;
 import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JVirtualInvokeExpr;
+import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.PAG;
 import soot.Scene;
@@ -70,13 +77,22 @@ public class Verifier {
 
     private static boolean verifyWeldAt(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldAt respect Property 1 */
-		System.out.println("Verifier: "+fixPoint.weldAtCalls.size());
 
     	for(JInvokeStmt call : fixPoint.weldAtCalls){
+    		Texpr1Node node;
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg = virExpr.getArg(0);
-    		Texpr1Intern apronArg = new Texpr1Intern(SootApronConverter.convertArithExpression(callArg, fixPoint.env));
+    		String robotNumber = virExpr.getBase().toString();
+    		//callArg ist entweder Variable oder Konstante. Wie klären?
+    		if(callArg instanceof JimpleLocal){
+	    		node = new Texpr1VarNode(((JimpleLocal) callArg).getName());
+    		}
+    		else{
+    			IntConstant c = (IntConstant) callArg;
+	    		node = new Texpr1CstNode((new MpqScalar(c.value)));
+    		}
+    		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
 	    		System.out.println(currentBounds.toString());
@@ -86,6 +102,7 @@ public class Verifier {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+    		
     	}
         return false;
     }
