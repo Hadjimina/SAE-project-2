@@ -366,7 +366,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		return a;
 
 	}
-
+ //mcSwag
 	public static final boolean isIntValue(Value val) {
 		return val.getType().toString().equals("int")
 				|| val.getType().toString().equals("short")
