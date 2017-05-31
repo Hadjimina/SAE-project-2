@@ -308,6 +308,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		Texpr1Node node = new Texpr1VarNode(valName);
 	    		Texpr1Intern apronArg = new Texpr1Intern(env, node);
 	    		try {
+	    			System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
 		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
