@@ -20,7 +20,7 @@ class SootApronConverter {
 		
 	}
 		
-	public Texpr1Intern convertArithExpression(Value expression, Environment env) {
+	public static Texpr1Intern convertArithExpression(Value expression, Environment env) {
 		
 		if(expression instanceof AbstractJimpleFloatBinopExpr){
 
@@ -56,7 +56,7 @@ class SootApronConverter {
 
 	}
 	
-	private Texpr1Node convertSingleValue(Value val) {
+	private static Texpr1Node convertSingleValue(Value val) {
 		if(val instanceof IntConstant) {
 			MpqScalar constRightVal = new MpqScalar(Integer.parseInt(val.toString()));
 			return new Texpr1CstNode(constRightVal);

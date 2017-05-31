@@ -1,5 +1,6 @@
 package ch.ethz.sae;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 import apron.Abstract1;
 import apron.ApronException;
 import apron.Environment;
+import apron.Interval;
 import apron.Manager;
 import apron.MpqScalar;
 import apron.Polka;
@@ -25,6 +27,7 @@ import soot.UnknownType;
 import soot.Value;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JAddExpr;
@@ -32,6 +35,7 @@ import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
 import soot.jimple.internal.JGtExpr;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
@@ -51,6 +55,11 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	private static final int WIDENING_THRESHOLD = 6;
 
 	private HashMap<Unit, Counter> loopHeads, backJumps;
+	
+	public List<JInvokeStmt> weldAtCalls;
+	public List<JInvokeStmt> weldBetweenCalls;
+	public List<JInvokeStmt> robotProperties;
+	
 	
 	private void recordIntLocalVars() {
 
@@ -153,11 +162,15 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	@Override
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
+		weldAtCalls = new ArrayList<JInvokeStmt>();
+		weldBetweenCalls = new ArrayList<JInvokeStmt>();
+		robotProperties = new ArrayList<JInvokeStmt>();
 		if(this.flag) {
 			this.flag = false;
 		}
 		
 		Stmt s = (Stmt) op;
+		//System.out.println(s.toString());
 
 		try {
 			if (s instanceof DefinitionStmt) {
@@ -275,6 +288,25 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				
 
 			}
+			 else if (s instanceof JInvokeStmt){
+				JInvokeStmt funcCall = (JInvokeStmt) s;
+				InvokeExpr invExpr = funcCall.getInvokeExpr();
+				String methodName = invExpr.getMethod().getName();
+				String className = invExpr.getMethod().getDeclaringClass().getName();
+				
+				if(methodName.equals("weldAt") && className.equals("Robot")){
+					weldAtCalls.add(funcCall);
+				}
+				else if(methodName.equals("weldBetween") && className.equalsIgnoreCase("Robot")){
+					weldBetweenCalls.add(funcCall);
+				}
+				else if(methodName.equals("<init>") && className.equals("Robot")){
+					robotProperties.add(funcCall);
+				}
+				System.out.println("Analysis: "+weldAtCalls.size());
+
+				 
+			 }
 			
 			
 			

@@ -1,12 +1,21 @@
 package ch.ethz.sae;
 
 import java.util.HashMap;
+import java.util.List;
 
+import apron.Abstract1;
+import apron.ApronException;
+import apron.Interval;
+import apron.Texpr1Intern;
+import soot.jimple.InvokeExpr;
+import soot.jimple.internal.JInvokeStmt;
+import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.PAG;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Value;
 import soot.toolkits.graph.BriefUnitGraph;
 
 public class Verifier {
@@ -32,7 +41,6 @@ public class Verifier {
             }
             Analysis analysis = new Analysis(new BriefUnitGraph(method.retrieveActiveBody()), c);
             analysis.run();
-            
             if (!verifyWeldAt(method, analysis, pointsToAnalysis)) {
                 weldAtFlag = 0;
             }
@@ -56,11 +64,29 @@ public class Verifier {
 
     private static boolean verifyWeldBetween(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldBetween respect Property 2 */
+    	
     	return false;
     }
 
     private static boolean verifyWeldAt(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldAt respect Property 1 */
+		System.out.println("Verifier: "+fixPoint.weldAtCalls.size());
+
+    	for(JInvokeStmt call : fixPoint.weldAtCalls){
+    		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
+    		Value callArg = virExpr.getArg(0);
+    		Texpr1Intern apronArg = new Texpr1Intern(SootApronConverter.convertArithExpression(callArg, fixPoint.env));
+    		try {
+				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
+	    		System.out.println(currentBounds.toString());
+	    		System.out.println("YOLO");
+
+			} catch (ApronException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
         return false;
     }
 
