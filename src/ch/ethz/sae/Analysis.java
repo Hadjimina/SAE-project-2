@@ -167,7 +167,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 		
 		Stmt s = (Stmt) op;
-		//System.out.println(s.toString());
+		System.out.println(s.toString());
+		
 
 		try {
 			if (s instanceof DefinitionStmt) {
@@ -176,11 +177,16 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				Value rhs = sd.getRightOp();
 
 				if(rhs instanceof JAddExpr || rhs instanceof JSubExpr || rhs instanceof JMulExpr) {
-					Texpr1Intern t = converter.convertArithExpression(rhs, env);
-					
-
-					inWrapper.get().assign(man, lhs.toString(), t, null);
+					Texpr1Intern t = converter.convertArithExpression(rhs, env);					
+					Abstract1 tempAbstract = new Abstract1(man, inWrapper.get());
+					tempAbstract.assign(man, lhs.toString(), t, null );
+					fallOutWrappers.set(0,new AWrapper(tempAbstract));
 			
+				}
+				else{
+					if(!fallOutWrappers.isEmpty()){
+						 copy(inWrapper, fallOutWrappers.get(0)); 
+					 }
 				}
 			}
 		
@@ -224,44 +230,43 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				//">"
 				else if(expr instanceof JGtExpr){
 					//branch-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 
 					//fallout-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 					
 				}
 				//">="
 				else if(expr instanceof JGeExpr){
 					//branch-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 
 					//fallout-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
-					
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 				}
 				//"<"
 				else if(expr instanceof JLtExpr){
 					//branch-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 
 					//fallout-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 				}
 				//"<="
 				else if(expr instanceof JLeExpr){
 					//branch-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 
 					//fallout-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 				}
 				//"!="
 				else if(expr instanceof JNeExpr){
@@ -286,6 +291,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 			}
 			 else if (s instanceof JInvokeStmt){
+				 copy(inWrapper, fallOutWrappers.get(0));
+				 
 				JInvokeStmt funcCall = (JInvokeStmt) s;
 				InvokeExpr invExpr = funcCall.getInvokeExpr();
 				String methodName = invExpr.getMethod().getName();
@@ -300,17 +307,25 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				else if(methodName.equals("<init>") && className.equals("Robot")){
 					robotProperties.add(funcCall);
 				}
+				
 
 				 
 			 }
-			System.out.println(local_ints.length);
+			 else{
+				 if(!fallOutWrappers.isEmpty()){
+					 copy(inWrapper, fallOutWrappers.get(0)); 
+				 }
+			 }
+			
 			for(String valName : local_ints){
+				
+				
 	    		Texpr1Node node = new Texpr1VarNode(valName);
 	    		Texpr1Intern apronArg = new Texpr1Intern(env, node);
 	    		try {
-	    			System.out.println(this.getFlowBefore(s).get().toString());
+	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
@@ -318,7 +333,12 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 					e.printStackTrace();
 				}
 			}
-
+			if(!fallOutWrappers.isEmpty()){
+				System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
+			}
+			if(!branchOutWrappers.isEmpty()){
+				System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
+			}
 
 			
 			
