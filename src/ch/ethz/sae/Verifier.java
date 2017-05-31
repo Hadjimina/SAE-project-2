@@ -23,6 +23,9 @@ public class Verifier {
 
         int weldAtFlag = 1;
         int weldBetweenFlag = 1;
+        
+        System.out.println("Methods: " + c.getMethods().toString());
+        System.out.println("PAG: " + pointsToAnalysis.toString());
 
         for (SootMethod method : c.getMethods()) {
 

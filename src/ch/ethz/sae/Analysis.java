@@ -32,6 +32,7 @@ import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
 import soot.jimple.internal.JGtExpr;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
@@ -46,7 +47,6 @@ import soot.util.Chain;
 
 // Implement your numerical analysis here.
 public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
-	boolean flag;
 
 	private static final int WIDENING_THRESHOLD = 6;
 
@@ -129,8 +129,6 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	/* === Constructor === */
 	public Analysis(UnitGraph g, SootClass jc) {
 		super(g);
-		this.flag = true;
-
 
 		this.g = g;
 		this.jclass = jc;
@@ -153,11 +151,9 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	@Override
 	protected void flowThrough(AWrapper inWrapper, Unit op,
 			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
-		if(this.flag) {
-			this.flag = false;
-		}
 		
 		Stmt s = (Stmt) op;
+		System.out.println("OutWrappers sizes: " + fallOutWrappers.size() + " " + branchOutWrappers.size());
 
 		try {
 			if (s instanceof DefinitionStmt) {
@@ -167,16 +163,12 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 				if(rhs instanceof JAddExpr || rhs instanceof JSubExpr || rhs instanceof JMulExpr) {
 					Texpr1Intern t = converter.convertArithExpression(rhs, env);
-					
-
 					inWrapper.get().assign(man, lhs.toString(), t, null);
 			
 				}
-			}
-		
-			
+			}			
 	
-			 else if (s instanceof JIfStmt) {
+			else if (s instanceof JIfStmt) {
 				Value expr = ((JIfStmt) s).getCondition();
 				Value leftValue = null;
 				Value rightValue = null;
@@ -274,12 +266,19 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				
 				
 
+			} else if (s instanceof JInvokeStmt) {
+				String methodName = ((JInvokeStmt) s).getInvokeExpr().getMethod().getName();
+				
+			}
+			Abstract1 a1 = inWrapper.get();
+			if(a1 != null) {
+				System.out.println(a1.toString());
+			} else {
+				System.out.println("a1 was null");
 			}
 			
-			
-			
 		} catch (ApronException e1) {
-			System.out.println("Flowtrought error");
+			System.out.println("Flowtrough error");
 			e1.printStackTrace();
 		}
 		
@@ -382,4 +381,5 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	public SootClass jclass;
 	private String class_ints[]; // integer class variables where the method is
 	// defined
+
 }
