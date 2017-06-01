@@ -169,8 +169,9 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 		
 		Stmt s = (Stmt) op;
-		System.out.println(s.toString());
-		System.out.println(inWrapper.get().toString());
+//		System.out.println(s.toString());
+//		System.out.println(inWrapper.get().toString());
+		
 		try {
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
@@ -219,11 +220,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 					 }
 				}
 			}
-			
-	
-		
-			
-	
+				
 			 else if (s instanceof JIfStmt) {
 				Value expr = ((JIfStmt) s).getCondition();
 				Value leftValue = null;

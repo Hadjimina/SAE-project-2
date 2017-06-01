@@ -19,6 +19,7 @@ import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.PAG;
+import soot.Local;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
@@ -84,6 +85,9 @@ public class Verifier {
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg = virExpr.getArg(0);
     		String robotNumber = virExpr.getBase().toString();
+    		
+    		System.out.println("PAG: "+pointsTo.reachingObjects((Local) virExpr.getBase()));
+    		
     		//callArg ist entweder Variable oder Konstante. Wie klären?
     		if(callArg instanceof JimpleLocal){
 	    		node = new Texpr1VarNode(((JimpleLocal) callArg).getName());
@@ -95,7 +99,7 @@ public class Verifier {
     		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
-	    		System.out.println(currentBounds.toString());
+//	    		System.out.println(currentBounds.toString());
 
 
 			} catch (ApronException e) {
@@ -104,6 +108,8 @@ public class Verifier {
 			}
     		
     	}
+    	
+    	
         return false;
     }
 
