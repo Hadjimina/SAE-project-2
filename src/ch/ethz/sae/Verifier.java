@@ -105,10 +105,14 @@ public class Verifier {
     		try {
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
+				if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
+					isGud = false;
+				}
 				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
 				if(!(mergedBounds.isLeq(robotInterval))){
 					isGud = false;
 				}
+				
 
 
 			} catch (ApronException e) {
