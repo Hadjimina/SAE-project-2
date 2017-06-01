@@ -49,6 +49,7 @@ public class Verifier {
             }
             Analysis analysis = new Analysis(new BriefUnitGraph(method.retrieveActiveBody()), c);
             analysis.run();
+            collector = new AllocNodeCollector(analysis, pointsToAnalysis);
             if (!verifyWeldAt(method, analysis, pointsToAnalysis)) {
                 weldAtFlag = 0;
             }
@@ -85,11 +86,7 @@ public class Verifier {
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg = virExpr.getArg(0);
     		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
-    		List<AllocNode> nodes = collector.getNodes(robot, pointsTo);
-    		if(nodes.size() != 1){
-    			System.out.println("MORE THAN 1 NODE!!!");
-    		}
-    		Interval robotInterval = fixPoint.allocationMap.get(nodes.get(0));
+    		Interval robotInterval = collector.getInterval(robot);
     		//callArg ist entweder Variable oder Konstante. Wie klären?
     		if(callArg instanceof JimpleLocal){
 	    		node = new Texpr1VarNode(((JimpleLocal) callArg).getName());
@@ -102,6 +99,7 @@ public class Verifier {
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
 	    		System.out.println(currentBounds.toString());
+	    		System.out.println(robotInterval.toString());
 
 
 			} catch (ApronException e) {
@@ -138,7 +136,7 @@ public class Verifier {
 
         return pag;
     }
-    private allocNodeCollector collector;
+    private static AllocNodeCollector collector;
     
 
 }
