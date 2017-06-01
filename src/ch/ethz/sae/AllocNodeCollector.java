@@ -46,8 +46,17 @@ public class AllocNodeCollector extends P2SetVisitor {
     	this.nodes = new LinkedList<AllocNode>();
     	PointsToSetInternal pts = (PointsToSetInternal) pag.reachingObjects(pointer);
     	pts.forall(this);
-    	if(nodes.size() != 1) {
-    		throw new RuntimeException("Pointer pointing to multiple objects.");
+    	if(nodes.size() == 0) {
+    		StringBuilder sb = new StringBuilder();
+    		sb.append("The pointer " + pointer.toString() + " points nowhere");
+    		throw new RuntimeException(sb.toString());
+    	} else if(nodes.size() > 1) {
+    		StringBuilder sb = new StringBuilder();
+    		sb.append("The pointer " + pointer.toString() + " points to ");
+    		for(AllocNode n : nodes) {
+    			sb.append(n.toString());
+    		}
+    		throw new RuntimeException(sb.toString());
     	}
         return nodes;
     }
