@@ -26,6 +26,7 @@ public class AllocNodeCollector extends P2SetVisitor {
 	public AllocNodeCollector(Analysis an, PAG pag) {
 		this.pag = pag;
 		this.an = an;
+		robotIntervals = new HashMap<AllocNode, Interval>();
 		AllocNode currAN;
 		Interval currInt;
 		for(JSpecialInvokeExpr invExpr : an.initCalls) {
