@@ -18,6 +18,7 @@ import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JVirtualInvokeExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.spark.SparkTransformer;
+import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.PAG;
 import soot.Scene;
 import soot.SootClass;
@@ -83,7 +84,12 @@ public class Verifier {
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg = virExpr.getArg(0);
-    		String robotNumber = virExpr.getBase().toString();
+    		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
+    		List<AllocNode> nodes = collector.getNodes(robot, pointsTo);
+    		if(nodes.size() != 1){
+    			System.out.println("MORE THAN 1 NODE!!!");
+    		}
+    		Interval robotInterval = fixPoint.allocationMap.get(nodes.get(0));
     		//callArg ist entweder Variable oder Konstante. Wie klären?
     		if(callArg instanceof JimpleLocal){
 	    		node = new Texpr1VarNode(((JimpleLocal) callArg).getName());
@@ -132,5 +138,7 @@ public class Verifier {
 
         return pag;
     }
+    private allocNodeCollector collector;
+    
 
 }
