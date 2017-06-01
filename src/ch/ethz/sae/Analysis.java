@@ -368,7 +368,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		try {
 	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
