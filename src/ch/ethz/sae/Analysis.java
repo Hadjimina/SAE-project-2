@@ -42,6 +42,7 @@ import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
 import soot.jimple.internal.JNeExpr;
+import soot.jimple.internal.JSpecialInvokeExpr;
 import soot.jimple.internal.JSubExpr;
 import soot.jimple.internal.JimpleLocal;
 import soot.jimple.toolkits.annotation.logic.Loop;
@@ -60,7 +61,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	
 	public List<JInvokeStmt> weldAtCalls = new ArrayList<JInvokeStmt>();
 	public List<JInvokeStmt> weldBetweenCalls = new ArrayList<JInvokeStmt>();
-	public List<JInvokeStmt> robotProperties = new ArrayList<JInvokeStmt>();
+	public List<JSpecialInvokeExpr> initCalls = new ArrayList<JSpecialInvokeExpr>();
 	
 	
 	private void recordIntLocalVars() {
@@ -169,9 +170,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 		
 		Stmt s = (Stmt) op;
-//		System.out.println(s.toString());
-//		System.out.println(inWrapper.get().toString());
-		
+		System.out.println(s.toString());
+		//System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
@@ -220,7 +220,11 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 					 }
 				}
 			}
-				
+			
+	
+		
+			
+	
 			 else if (s instanceof JIfStmt) {
 				Value expr = ((JIfStmt) s).getCondition();
 				Value leftValue = null;
@@ -259,50 +263,48 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				//">"
 				else if(expr instanceof JGtExpr){
 					//branch-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 
 					//fallout-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 					
 				}
 				//">="
 				else if(expr instanceof JGeExpr){
-					//System.out.println(inWrapper.get().toString());
 					//branch-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
-					//falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
 					Abstract1 tempAbstract = new Abstract1(man, env);
 					
-					falloutAbstractFinal = inWrapper.get().joinCopy(man, tempAbstract.meetCopy(man, falloutConstraint));
+					branchAbstractFinal = inWrapper.get().meetCopy(man, tempAbstract.meetCopy(man, branchConstraint));
 					
 					
 
 					//fallout-case
 					
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 				}
 				//"<"
 				else if(expr instanceof JLtExpr){
 					//branch-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 
 					//fallout-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 				}
 				//"<="
 				else if(expr instanceof JLeExpr){
 					//branch-case
-					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUPEQ, rightMinusLeft);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 
 					//fallout-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
 				}
 				//"!="
 				else if(expr instanceof JNeExpr){
@@ -344,8 +346,14 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				else if(methodName.equals("weldBetween") && className.equalsIgnoreCase("Robot")){
 					weldBetweenCalls.add(funcCall);
 				}
-				else if(methodName.equals("<init>") && className.equals("Robot")){
-					robotProperties.add(funcCall);
+				else if (methodName.equals("<init>") && className.equals("Robot")){
+					if (!initCalls.contains(invExpr)){
+						JSpecialInvokeExpr spec = (JSpecialInvokeExpr) invExpr;
+						if (spec.getBaseBox().getValue().getType().toString().equals("Robot"))
+						{
+						initCalls.add(spec);
+						}
+					}
 				}
 				
 
@@ -365,7 +373,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		try {
 	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
@@ -374,10 +382,10 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				}
 			}
 			if(!fallOutWrappers.isEmpty()){
-				System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
+				//System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
 			}
 			if(!branchOutWrappers.isEmpty()){
-				System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
+				//System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
 			}
 
 			
