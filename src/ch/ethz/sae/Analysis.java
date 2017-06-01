@@ -27,7 +27,9 @@ import soot.UnknownType;
 import soot.Value;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.IntConstant;
 import soot.jimple.InvokeExpr;
+import soot.jimple.ParameterRef;
 import soot.jimple.Stmt;
 import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JAddExpr;
@@ -161,15 +163,14 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 	@Override
 	protected void flowThrough(AWrapper inWrapper, Unit op,
-			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers) {
+			List<AWrapper> fallOutWrappers, List<AWrapper> branchOutWrappers){
 		if(this.flag) {
 			this.flag = false;
 		}
 		
 		Stmt s = (Stmt) op;
 		System.out.println(s.toString());
-		
-
+		System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
@@ -180,15 +181,46 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 					Texpr1Intern t = converter.convertArithExpression(rhs, env);					
 					Abstract1 tempAbstract = new Abstract1(man, inWrapper.get());
 					tempAbstract.assign(man, lhs.toString(), t, null );
-					fallOutWrappers.set(0,new AWrapper(tempAbstract));
+					for(AWrapper a : fallOutWrappers){
+						a.set(tempAbstract);
+					}
 			
+				}
+				else if(rhs instanceof IntConstant){
+					IntConstant constant = (IntConstant) rhs;
+					Texpr1Node t = converter.convertValueExpression(constant);
+					Abstract1 tempAbstract = new Abstract1(man, inWrapper.get());
+					Texpr1Intern t_intern = new Texpr1Intern(env, t);
+					tempAbstract.assign(man, lhs.toString(), t_intern, null );
+					for(AWrapper a : fallOutWrappers){
+						a.set(tempAbstract);
+					}
+				}
+				else if(rhs instanceof JimpleLocal){
+					if(env.hasVar(((JimpleLocal) rhs).getName())){
+						Texpr1Node t = converter.convertValueExpression(rhs);
+						Abstract1 tempAbstract = new Abstract1(man, inWrapper.get());
+						Texpr1Intern t_intern = new Texpr1Intern(env, t);
+						tempAbstract.assign(man, lhs.toString(), t_intern, null );
+						for(AWrapper a : fallOutWrappers){
+							a.set(tempAbstract);
+						}
+					}else{
+						for(AWrapper a : fallOutWrappers){
+							copy(inWrapper, a);
+						}
+					}
 				}
 				else{
 					if(!fallOutWrappers.isEmpty()){
-						 copy(inWrapper, fallOutWrappers.get(0)); 
+						for(AWrapper a : fallOutWrappers){
+							copy(inWrapper, a);
+						}
 					 }
 				}
 			}
+			
+	
 		
 			
 	
@@ -216,15 +248,15 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				// "=="
 				if(expr instanceof JEqExpr){
 					//branch-case
-					Tcons1 branchConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
-					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
+					Tcons1 fallOutConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
+					falloutAbstractFinal = inWrapper.get().meetCopy(man, fallOutConstraint);
 					
 					//fallout-case
-					Tcons1 falloutConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					Tcons1 falloutConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					Abstract1 falloutAbstract1 = inWrapper.get().meetCopy(man, falloutConstraint1);
-					Abstract1 falloutAbstract2 = inWrapper.get().meetCopy(man, falloutConstraint2);
-					falloutAbstractFinal = falloutAbstract1.joinCopy(man, falloutAbstract2);
+					Tcons1 branchConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					Tcons1 branchConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					Abstract1 branchAbstract1 = inWrapper.get().meetCopy(man, branchConstraint1);
+					Abstract1 branchAbstract2 = inWrapper.get().meetCopy(man, branchConstraint2);
+					branchAbstractFinal = branchAbstract1.joinCopy(man, branchAbstract2);
 								
 				}
 				//">"
@@ -240,11 +272,18 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				}
 				//">="
 				else if(expr instanceof JGeExpr){
+					//System.out.println(inWrapper.get().toString());
 					//branch-case
 					Tcons1 falloutConstraint = new Tcons1(env, Tcons1.SUPEQ, leftMinusRight);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					//falloutAbstractFinal = inWrapper.get().meetCopy(man, falloutConstraint);
+					Abstract1 tempAbstract = new Abstract1(man, env);
+					
+					falloutAbstractFinal = inWrapper.get().joinCopy(man, tempAbstract.meetCopy(man, falloutConstraint));
+					
+					
 
 					//fallout-case
+					
 					Tcons1 branchConstraint = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
 					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 				}
@@ -284,8 +323,12 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				else{
 					System.out.println("Error in if-Statement");
 				}
-				fallOutWrappers.set(0,new AWrapper(falloutAbstractFinal));
-				branchOutWrappers.set(0,new AWrapper(branchAbstractFinal));
+				for(AWrapper a : fallOutWrappers){
+					a.set(falloutAbstractFinal);
+				}
+				for(AWrapper a : branchOutWrappers){
+					a.set(branchAbstractFinal);
+				}
 				
 				
 
@@ -325,7 +368,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		try {
 	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
@@ -404,7 +447,6 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 	@Override
 	protected void merge(AWrapper src1, AWrapper src2, AWrapper trg) {
-
 		Abstract1 a1 = src1.get();
 		Abstract1 a2 = src2.get();
 		Abstract1 a3 = null;
@@ -413,6 +455,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 			a3 = a1.joinCopy(man, a2);
 		} catch (ApronException e) {
 			e.printStackTrace();
+			
 		}
 		trg.set(a3);
 	}
