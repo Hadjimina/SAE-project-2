@@ -170,7 +170,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 		
 		Stmt s = (Stmt) op;
-		System.out.println(s.toString());
+		//System.out.println(s.toString());
 		//System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
