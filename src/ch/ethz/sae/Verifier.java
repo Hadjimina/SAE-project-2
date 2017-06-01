@@ -73,13 +73,56 @@ public class Verifier {
 
     private static boolean verifyWeldBetween(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldBetween respect Property 2 */
-    	
-    	return false;
+    	boolean isGud = true;
+    	for(JInvokeStmt call : fixPoint.weldBetweenCalls){
+    		Texpr1Node node1;
+    		Texpr1Node node2;
+    		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
+    		Value callArg1 = virExpr.getArg(0);
+    		Value callArg2 = virExpr.getArg(1);
+    		System.out.println("Beide Argumente: "+callArg1+" "+callArg2);
+    		
+    		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
+    		Interval robotInterval = collector.getInterval(robot);
+    		//callArg ist entweder Variable oder Konstante. Wie klären?
+    		if(callArg1 instanceof JimpleLocal){
+	    		node1 = new Texpr1VarNode(((JimpleLocal) callArg1).getName());
+    		}
+    		else{
+    			IntConstant c = (IntConstant) callArg1;
+	    		node1 = new Texpr1CstNode((new MpqScalar(c.value)));
+    		}
+    		if(callArg2 instanceof JimpleLocal){
+	    		node2 = new Texpr1VarNode(((JimpleLocal) callArg2).getName());
+    		}
+    		else{
+    			IntConstant c = (IntConstant) callArg1;
+	    		node2 = new Texpr1CstNode((new MpqScalar(c.value)));
+    		}
+    		Texpr1Intern apronArg1 = new Texpr1Intern(fixPoint.env, node1 );
+    		Texpr1Intern apronArg2 = new Texpr1Intern(fixPoint.env, node1 );
+    		try {
+				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
+				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
+				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
+				if(!(mergedBounds.isLeq(robotInterval))){
+					isGud = false;
+				}
+
+
+			} catch (ApronException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    	}
+        return isGud;
     }
 
     private static boolean verifyWeldAt(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldAt respect Property 1 */
-
+    	boolean isGud = true;
     	for(JInvokeStmt call : fixPoint.weldAtCalls){
     		Texpr1Node node;
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
@@ -98,8 +141,9 @@ public class Verifier {
     		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
-	    		System.out.println(currentBounds.toString());
-	    		System.out.println(robotInterval.toString());
+				if(!(currentBounds.isLeq(robotInterval))){
+					isGud = false;
+				}
 
 
 			} catch (ApronException e) {
@@ -108,7 +152,7 @@ public class Verifier {
 			}
     		
     	}
-        return false;
+        return isGud;
     }
 
     private static SootClass loadClass(String name) {
