@@ -101,10 +101,12 @@ public class Verifier {
 	    		node2 = new Texpr1CstNode((new MpqScalar(c.value)));
     		}
     		Texpr1Intern apronArg1 = new Texpr1Intern(fixPoint.env, node1 );
-    		Texpr1Intern apronArg2 = new Texpr1Intern(fixPoint.env, node1 );
+    		Texpr1Intern apronArg2 = new Texpr1Intern(fixPoint.env, node2 );
     		try {
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
+				System.out.println(currentBounds1.toString());
+				System.out.println(currentBounds2.toString());
 				if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
 					isGud = false;
 				}
