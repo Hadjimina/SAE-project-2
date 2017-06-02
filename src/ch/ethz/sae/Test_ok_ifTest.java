@@ -47,7 +47,7 @@ public class Test_ok_ifTest {
 		
 		boolean ans1, ans2;
 		ans1 = output.contains(args[0]+" WELD_AT_OK");
-		ans2 = output.contains(args[0]+" WELD_BETWEEN_OK");
+		ans2 = output.contains(args[0]+" WELD_BETWEEN_NOT_OK");
 		System.setOut(old);
 		System.out.println(args[0]);
 		System.out.println("weldAt is safe: " + (ans1));
@@ -57,6 +57,6 @@ public class Test_ok_ifTest {
 		assertEquals(ansT, ans1);
 		assertEquals(ansF, output.contains(args[0]+" WELD_AT_NOT_OK"));
 		assertEquals(ansT,ans2);
-		assertEquals(ansF,output.contains(args[0]+" WELD_BETWEEN_NOT_OK"));
+		assertEquals(ansF,output.contains(args[0]+" WELD_BETWEEN_OK"));
 	}
 }
