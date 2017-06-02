@@ -76,6 +76,7 @@ public class Verifier {
     private static boolean verifyWeldBetween(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldBetween respect Property 2 */
     	boolean isGud = true;
+
     	for(JInvokeStmt call : fixPoint.weldBetweenCalls){
     		Texpr1Node node1;
     		Texpr1Node node2;
@@ -101,7 +102,7 @@ public class Verifier {
 	    		node2 = new Texpr1VarNode(((JimpleLocal) callArg2).getName());
     		}
     		else{
-    			IntConstant c = (IntConstant) callArg1;
+    			IntConstant c = (IntConstant) callArg2;
 	    		node2 = new Texpr1CstNode((new MpqScalar(c.value)));
     		}
     		Texpr1Intern apronArg1 = new Texpr1Intern(fixPoint.env, node1 );
@@ -112,16 +113,24 @@ public class Verifier {
         		flowBefore.meet(fixPoint.man, constraint);
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
+				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
 				System.out.println(currentBounds1.toString());
 				System.out.println(currentBounds2.toString());
-				if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
+
+
+				System.out.println(currentBounds1.sup().cmp(currentBounds2.inf()));
+				if(flowBefore.isBottom(fixPoint.man)){
 					isGud = false;
+
 				}
-				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
-				if(!(mergedBounds.isLeq(robotInterval))){
+				/*else if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
 					isGud = false;
+
+				}*/
+				else if(!(mergedBounds.isLeq(robotInterval))){
+					isGud = false;
+
 				}
-				
 
 
 			} catch (ApronException e) {
