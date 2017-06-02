@@ -86,7 +86,6 @@ public class Verifier {
     		Value callArg1 = virExpr.getArg(0);
     		Value callArg2 = virExpr.getArg(1);
     		
-    		System.out.println("Beide Argumente: "+callArg1+" "+callArg2);
     		
     		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
     		Interval robotInterval = collector.getInterval(robot);
@@ -120,15 +119,19 @@ public class Verifier {
 				
 				System.out.println(currentBounds1.toString());
 				System.out.println(currentBounds2.toString());
-				System.out.println(currentBounds1.sup().cmp(currentBounds2.inf()));
+				//System.out.println(currentBounds1.sup().cmp(currentBounds2.inf()));
 				
-				if((tempAbstract.isBottom(fixPoint.man))){	
+				
+				if(flowBefore.isBottom(fixPoint.man)){
+					isGud = false;
+				}
+				else if((tempAbstract.isBottom(fixPoint.man))){	
 					if(!(mergedBounds.isLeq(robotInterval))){
 						isGud = false;
 						
 					}
-					System.out.println("HELLO");
 				}
+		
 				else if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
 					isGud = false;
 
@@ -169,6 +172,10 @@ public class Verifier {
     		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
+				System.out.println(currentBounds.toString());
+				if(flowBefore.isBottom(fixPoint.man)){
+					isGud = false;
+				}
 				if(!(currentBounds.isLeq(robotInterval))){
 					isGud = false;
 				}

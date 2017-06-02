@@ -35,6 +35,7 @@ import soot.jimple.internal.AbstractJimpleIntBinopExpr;
 import soot.jimple.internal.JAddExpr;
 import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JGeExpr;
+import soot.jimple.internal.JGotoStmt;
 import soot.jimple.internal.JGtExpr;
 import soot.jimple.internal.JIfStmt;
 import soot.jimple.internal.JInvokeStmt;
@@ -171,6 +172,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		
 		Stmt s = (Stmt) op;
 		System.out.println(s.toString());
+		
 		//System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
@@ -325,8 +327,14 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				for(AWrapper a : fallOutWrappers){
 					a.set(falloutAbstractFinal);
 				}
+				if(!s.branches()){
+					Abstract1 temp = new Abstract1(man, env, true);
+					branchAbstractFinal = temp;
+					System.out.println("DO ISCHES");
+				}
 				for(AWrapper a : branchOutWrappers){
 					a.set(branchAbstractFinal);
+					
 				}
 				
 				
@@ -359,6 +367,12 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 
 				 
 			 }
+			 else if(s instanceof JGotoStmt){
+				 Abstract1 temp = new Abstract1(man, env, true);
+				 for(AWrapper a : branchOutWrappers){
+					a.set(temp);
+					
+				}		 }
 			 else{
 				 if(!fallOutWrappers.isEmpty()){
 					 copy(inWrapper, fallOutWrappers.get(0)); 
@@ -373,7 +387,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		try {
 	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
