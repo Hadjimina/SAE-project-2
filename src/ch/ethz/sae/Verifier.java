@@ -107,26 +107,32 @@ public class Verifier {
     		}
     		Texpr1Intern apronArg1 = new Texpr1Intern(fixPoint.env, node1 );
     		Texpr1Intern apronArg2 = new Texpr1Intern(fixPoint.env, node2 );
-    		Texpr1Node subtraction = new Texpr1BinNode(Texpr1BinNode.OP_SUB, node2, node1);
-    		Tcons1 constraint = new Tcons1(fixPoint.env, Tcons1.SUP, subtraction);
+    		Texpr1Node subtraction = new Texpr1BinNode(Texpr1BinNode.OP_SUB, node1, node2);
+    		Tcons1 constraint = new Tcons1(fixPoint.env, Tcons1.SUPEQ, subtraction);
     		try {
-        		flowBefore.meet(fixPoint.man, constraint);
+        		//flowBefore.meet(fixPoint.man, constraint);
+    			Abstract1 tempAbstract = new Abstract1(fixPoint.man, flowBefore);
+    			tempAbstract.meet(fixPoint.man, constraint);
+    			
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
 				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
+				
 				System.out.println(currentBounds1.toString());
 				System.out.println(currentBounds2.toString());
-
-
 				System.out.println(currentBounds1.sup().cmp(currentBounds2.inf()));
-				if(flowBefore.isBottom(fixPoint.man)){
+				
+				if((tempAbstract.isBottom(fixPoint.man))){	
+					if(!(mergedBounds.isLeq(robotInterval))){
+						isGud = false;
+						
+					}
+					System.out.println("HELLO");
+				}
+				else if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
 					isGud = false;
 
 				}
-				/*else if(!(currentBounds1.sup().cmp(currentBounds2.inf()) == -1)){
-					isGud = false;
-
-				}*/
 				else if(!(mergedBounds.isLeq(robotInterval))){
 					isGud = false;
 
