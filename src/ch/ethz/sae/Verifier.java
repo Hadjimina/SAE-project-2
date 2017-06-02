@@ -7,6 +7,8 @@ import apron.Abstract1;
 import apron.ApronException;
 import apron.Interval;
 import apron.MpqScalar;
+import apron.Tcons1;
+import apron.Texpr1BinNode;
 import apron.Texpr1CstNode;
 import apron.Texpr1Intern;
 import apron.Texpr1Node;
@@ -78,9 +80,11 @@ public class Verifier {
     		Texpr1Node node1;
     		Texpr1Node node2;
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg1 = virExpr.getArg(0);
     		Value callArg2 = virExpr.getArg(1);
+    		
     		System.out.println("Beide Argumente: "+callArg1+" "+callArg2);
     		
     		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
@@ -102,7 +106,10 @@ public class Verifier {
     		}
     		Texpr1Intern apronArg1 = new Texpr1Intern(fixPoint.env, node1 );
     		Texpr1Intern apronArg2 = new Texpr1Intern(fixPoint.env, node2 );
+    		Texpr1Node subtraction = new Texpr1BinNode(Texpr1BinNode.OP_SUB, node2, node1);
+    		Tcons1 constraint = new Tcons1(fixPoint.env, Tcons1.SUP, subtraction);
     		try {
+        		flowBefore.meet(fixPoint.man, constraint);
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
 				System.out.println(currentBounds1.toString());
