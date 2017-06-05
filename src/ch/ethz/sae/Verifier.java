@@ -154,9 +154,18 @@ public class Verifier {
     private static boolean verifyWeldAt(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldAt respect Property 1 */
     	boolean isGud = true;
+    	
     	for(JInvokeStmt call : fixPoint.weldAtCalls){
     		Texpr1Node node;
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		try {
+				if(flowBefore.isBottom(fixPoint.man)){
+					break;
+				}
+			} catch (ApronException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg = virExpr.getArg(0);
     		JimpleLocal robot = (JimpleLocal) virExpr.getBase();
@@ -172,10 +181,8 @@ public class Verifier {
     		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
-				System.out.println(currentBounds.toString());
-				if(flowBefore.isBottom(fixPoint.man)){
-					isGud = false;
-				}
+				//System.out.println(currentBounds.toString());
+				
 				if(!(currentBounds.isLeq(robotInterval))){
 					isGud = false;
 				}

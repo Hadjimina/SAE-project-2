@@ -43,6 +43,7 @@ import soot.jimple.internal.JLeExpr;
 import soot.jimple.internal.JLtExpr;
 import soot.jimple.internal.JMulExpr;
 import soot.jimple.internal.JNeExpr;
+import soot.jimple.internal.JNegExpr;
 import soot.jimple.internal.JSpecialInvokeExpr;
 import soot.jimple.internal.JSubExpr;
 import soot.jimple.internal.JimpleLocal;
@@ -173,7 +174,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		Stmt s = (Stmt) op;
 		System.out.println(s.toString());
 		
-		//System.out.println(inWrapper.get().toString());
+		System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
@@ -188,6 +189,18 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 						a.set(tempAbstract);
 					}
 			
+				}
+				else if(rhs instanceof JNegExpr){
+					Texpr1Node zero = new Texpr1CstNode(new MpqScalar(0));
+					Value var = ((JNegExpr) rhs).getOp();
+					Texpr1Node varNode = converter.convertValueExpression(var);
+					Texpr1Node negValue = new Texpr1BinNode(Texpr1BinNode.OP_SUB, zero, varNode);
+					Texpr1Intern negValueIntern = new Texpr1Intern(env, negValue);
+					Abstract1 tempAbstract = new Abstract1(man, inWrapper.get());
+					tempAbstract.assign(man, lhs.toString(), negValueIntern, null );
+					for(AWrapper a : fallOutWrappers){
+						a.set(tempAbstract);
+					}
 				}
 				else if(rhs instanceof IntConstant){
 					IntConstant constant = (IntConstant) rhs;
@@ -251,15 +264,15 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				// "=="
 				if(expr instanceof JEqExpr){
 					//branch-case
-					Tcons1 fallOutConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
-					falloutAbstractFinal = inWrapper.get().meetCopy(man, fallOutConstraint);
+					Tcons1 branchConstraint = new Tcons1(env, Tcons1.EQ, leftMinusRight);
+					branchAbstractFinal = inWrapper.get().meetCopy(man, branchConstraint);
 					
 					//fallout-case
-					Tcons1 branchConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
-					Tcons1 branchConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
-					Abstract1 branchAbstract1 = inWrapper.get().meetCopy(man, branchConstraint1);
-					Abstract1 branchAbstract2 = inWrapper.get().meetCopy(man, branchConstraint2);
-					branchAbstractFinal = branchAbstract1.joinCopy(man, branchAbstract2);
+					Tcons1 falloutConstraint1 = new Tcons1(env, Tcons1.SUP, leftMinusRight);
+					Tcons1 falloutConstraint2 = new Tcons1(env, Tcons1.SUP, rightMinusLeft);
+					Abstract1 falloutAbstract1 = inWrapper.get().meetCopy(man, falloutConstraint1);
+					Abstract1 falloutAbstract2 = inWrapper.get().meetCopy(man, falloutConstraint2);
+					falloutAbstractFinal = falloutAbstract1.joinCopy(man, falloutAbstract2);
 								
 				}
 				//">"
@@ -327,11 +340,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				for(AWrapper a : fallOutWrappers){
 					a.set(falloutAbstractFinal);
 				}
-				if(!s.branches()){
-					Abstract1 temp = new Abstract1(man, env, true);
-					branchAbstractFinal = temp;
-					System.out.println("DO ISCHES");
-				}
+			
 				for(AWrapper a : branchOutWrappers){
 					a.set(branchAbstractFinal);
 					
@@ -368,14 +377,30 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				 
 			 }
 			 else if(s instanceof JGotoStmt){
-				 Abstract1 temp = new Abstract1(man, env, true);
-				 for(AWrapper a : branchOutWrappers){
-					a.set(temp);
-					
-				}		 }
-			 else{
-				 if(!fallOutWrappers.isEmpty()){
+				 System.out.println(fallOutWrappers.isEmpty());
+				 /*if(!fallOutWrappers.isEmpty()){
 					 copy(inWrapper, fallOutWrappers.get(0)); 
+				 }*/
+				 Abstract1 abs = inWrapper.get();
+				 if(fallOutWrappers.isEmpty())
+					 fallOutWrappers.add(new AWrapper(abs));
+				 else {
+					 for(AWrapper a : fallOutWrappers){
+						a.set(abs);	
+					 }
+				 }
+				 if(branchOutWrappers.isEmpty())
+					 branchOutWrappers.add(new AWrapper(abs));
+				 else {
+					 for(AWrapper a : branchOutWrappers){
+						a.set(abs);	
+					 }
+				 }
+				}		 
+			 else{
+				 Abstract1 abs = inWrapper.get();
+				 for(AWrapper a : fallOutWrappers){
+					a.set(abs);	
 				 }
 			 }
 			
@@ -387,7 +412,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		try {
 	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		//System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
+		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
 
 
 				} catch (ApronException e) {
@@ -396,10 +421,10 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				}
 			}
 			if(!fallOutWrappers.isEmpty()){
-				//System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
+				System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
 			}
 			if(!branchOutWrappers.isEmpty()){
-				//System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
+				System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
 			}
 
 			
