@@ -78,14 +78,11 @@ public class Verifier {
     	boolean isGud = true;
     	int abstractNumber = 0;
     	for(JInvokeStmt call : fixPoint.weldBetweenCalls){
-    		System.out.println(call.toString());
     		Texpr1Node node1;
     		Texpr1Node node2;
     		Abstract1 flowBefore = fixPoint.weldBetweenAbstracts.get(abstractNumber);
     		abstractNumber++;
-    		//Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
-    		//System.out.println(flowBefore.toString());
-    		
+ 	
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg1 = virExpr.getArg(0);
     		Value callArg2 = virExpr.getArg(1);
@@ -113,18 +110,12 @@ public class Verifier {
     		Texpr1Node subtraction = new Texpr1BinNode(Texpr1BinNode.OP_SUB, node1, node2);
     		Tcons1 constraint = new Tcons1(fixPoint.env, Tcons1.SUPEQ, subtraction);
     		try {
-        		//flowBefore.meet(fixPoint.man, constraint);
     			Abstract1 tempAbstract = new Abstract1(fixPoint.man, flowBefore);
     			tempAbstract.meet(fixPoint.man, constraint);
     			
 				Interval currentBounds1 = flowBefore.getBound(fixPoint.man, apronArg1);
 				Interval currentBounds2 = flowBefore.getBound(fixPoint.man, apronArg2);
 				Interval mergedBounds = new Interval(currentBounds1.inf(), currentBounds2.sup());
-				
-				System.out.println(currentBounds1.toString());
-				System.out.println(currentBounds2.toString());
-				//System.out.println(currentBounds1.sup().cmp(currentBounds2.inf()));
-				
 				
 				if(flowBefore.isBottom(fixPoint.man)){
 					isGud = false;
@@ -158,10 +149,11 @@ public class Verifier {
     private static boolean verifyWeldAt(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldAt respect Property 1 */
     	boolean isGud = true;
-    	
+    	int abstractNumber = 0;
     	for(JInvokeStmt call : fixPoint.weldAtCalls){
     		Texpr1Node node;
-    		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		Abstract1 flowBefore = fixPoint.weldAtAbstracts.get(abstractNumber);
+    		abstractNumber++;
     		try {
 				if(flowBefore.isBottom(fixPoint.man)){
 					break;
@@ -185,7 +177,6 @@ public class Verifier {
     		Texpr1Intern apronArg = new Texpr1Intern(fixPoint.env, node );
     		try {
 				Interval currentBounds = flowBefore.getBound(fixPoint.man, apronArg);
-				//System.out.println(currentBounds.toString());
 				
 				if(!(currentBounds.isLeq(robotInterval))){
 					isGud = false;

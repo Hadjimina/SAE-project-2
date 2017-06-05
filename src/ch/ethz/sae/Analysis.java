@@ -65,6 +65,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	public List<JInvokeStmt> weldBetweenCalls = new ArrayList<JInvokeStmt>();
 	public List<JSpecialInvokeExpr> initCalls = new ArrayList<JSpecialInvokeExpr>();
 	public List<Abstract1> weldBetweenAbstracts = new ArrayList<Abstract1>();
+	public List<Abstract1> weldAtAbstracts = new ArrayList<Abstract1>();
+
 	
 	
 	private void recordIntLocalVars() {
@@ -173,9 +175,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 		}
 		
 		Stmt s = (Stmt) op;
-		System.out.println(s.toString());
 		
-		System.out.println(inWrapper.get().toString());
 		try {
 			if (s instanceof DefinitionStmt) {
 				DefinitionStmt sd = (DefinitionStmt) s;
@@ -360,6 +360,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				
 				if(methodName.equals("weldAt") && className.equals("Robot")){
 					weldAtCalls.add(funcCall);
+					weldAtAbstracts.add(inWrapper.get());
+
 				}
 				else if(methodName.equals("weldBetween") && className.equalsIgnoreCase("Robot")){
 					weldBetweenAbstracts.add(inWrapper.get());
@@ -379,7 +381,6 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				 
 			 }
 			 else if(s instanceof JGotoStmt){
-				 System.out.println(fallOutWrappers.isEmpty());
 				 /*if(!fallOutWrappers.isEmpty()){
 					 copy(inWrapper, fallOutWrappers.get(0)); 
 				 }*/
@@ -412,10 +413,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	    		Texpr1Node node = new Texpr1VarNode(valName);
 	    		Texpr1Intern apronArg = new Texpr1Intern(env, node);
 	    		try {
-	    			//System.out.println(this.getFlowBefore(s).get().toString());
 					Interval currentBounds = this.getFlowBefore(s).get().getBound(man, apronArg);
-		    		System.out.println("At Line: "+s.toString()+" The Variable "+valName+" can have Value: "+currentBounds.toString());
-
 
 				} catch (ApronException e) {
 					// TODO Auto-generated catch block
@@ -423,10 +421,8 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 				}
 			}
 			if(!fallOutWrappers.isEmpty()){
-				System.out.println("Fallout "+fallOutWrappers.get(0).get().toString(man));
 			}
 			if(!branchOutWrappers.isEmpty()){
-				System.out.println("Branchout "+ branchOutWrappers.get(0).get().toString(man));
 			}
 
 			
