@@ -76,13 +76,15 @@ public class Verifier {
     private static boolean verifyWeldBetween(SootMethod method, Analysis fixPoint, PAG pointsTo) {
     	/* TODO: check whether all calls to weldBetween respect Property 2 */
     	boolean isGud = true;
-
+    	int abstractNumber = 0;
     	for(JInvokeStmt call : fixPoint.weldBetweenCalls){
     		System.out.println(call.toString());
     		Texpr1Node node1;
     		Texpr1Node node2;
-    		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
-    		System.out.println(flowBefore.toString());
+    		Abstract1 flowBefore = fixPoint.weldBetweenAbstracts.get(abstractNumber);
+    		abstractNumber++;
+    		//Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		//System.out.println(flowBefore.toString());
     		
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg1 = virExpr.getArg(0);

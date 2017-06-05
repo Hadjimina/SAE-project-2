@@ -64,6 +64,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 	public List<JInvokeStmt> weldAtCalls = new ArrayList<JInvokeStmt>();
 	public List<JInvokeStmt> weldBetweenCalls = new ArrayList<JInvokeStmt>();
 	public List<JSpecialInvokeExpr> initCalls = new ArrayList<JSpecialInvokeExpr>();
+	public List<Abstract1> weldBetweenAbstracts = new ArrayList<Abstract1>();
 	
 	
 	private void recordIntLocalVars() {
@@ -361,6 +362,7 @@ public class Analysis extends ForwardBranchedFlowAnalysis<AWrapper> {
 					weldAtCalls.add(funcCall);
 				}
 				else if(methodName.equals("weldBetween") && className.equalsIgnoreCase("Robot")){
+					weldBetweenAbstracts.add(inWrapper.get());
 					weldBetweenCalls.add(funcCall);
 				}
 				else if (methodName.equals("<init>") && className.equals("Robot")){

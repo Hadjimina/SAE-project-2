@@ -4,7 +4,7 @@ public class Test_ok_while {
 			Robot r = new Robot(-2, 6);
 			int i = 0;
 			while (i < 4) {
-				i *= 2;			
+				i ++;			
 			} 
 			r.weldAt(i-2);
 			r.weldBetween(i-5, i);
