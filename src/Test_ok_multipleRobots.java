@@ -6,7 +6,7 @@ public class Test_ok_multipleRobots {
 		int i = 0;
 		int k = 8;
 		while (i < 4) {
-			i+=4;			
+			i++;			
 		}
 		r.weldAt(i+2);
 		s.weldAt(k);

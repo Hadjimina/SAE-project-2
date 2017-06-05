@@ -78,9 +78,11 @@ public class Verifier {
     	boolean isGud = true;
 
     	for(JInvokeStmt call : fixPoint.weldBetweenCalls){
+    		System.out.println(call.toString());
     		Texpr1Node node1;
     		Texpr1Node node2;
     		Abstract1 flowBefore = fixPoint.getFlowBefore(call).get();
+    		System.out.println(flowBefore.toString());
     		
     		JVirtualInvokeExpr virExpr = (JVirtualInvokeExpr) call.getInvokeExprBox().getValue();
     		Value callArg1 = virExpr.getArg(0);

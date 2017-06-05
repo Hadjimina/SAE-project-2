@@ -46,7 +46,7 @@ public class Test_nestedwhileTest {
 		String output = new String(outContent.toByteArray());
 		
 		boolean ans1, ans2;
-		ans1 = output.contains(args[0]+" WELD_AT__NOT_OK");
+		ans1 = output.contains(args[0]+" WELD_AT_NOT_OK");
 		ans2 = output.contains(args[0]+" WELD_BETWEEN_NOT_OK");
 		System.setOut(old);
 		System.out.println(args[0]);
@@ -56,8 +56,8 @@ public class Test_nestedwhileTest {
 		
 		assertEquals(ansT, ans1);
 		assertEquals(ansF, output.contains(args[0]+" WELD_AT_OK"));
-		assertEquals(ansF,ans2);
-		assertEquals(ansT,output.contains(args[0]+" WELD_BETWEEN_OK"));
+		assertEquals(ansT,ans2);
+		assertEquals(ansF,output.contains(args[0]+" WELD_BETWEEN_OK"));
 	}
 }
 	

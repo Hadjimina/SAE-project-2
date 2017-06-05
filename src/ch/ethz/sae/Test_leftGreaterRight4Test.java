@@ -17,7 +17,7 @@ public class Test_leftGreaterRight4Test {
 
 	private void init(){
 		args = new String[1];
-		args[0] = "Test_leftGreaterRight1";		//Test File name
+		args[0] = "Test_leftGreaterRight4";		//Test File name
 	}
 	
 //	@Before
